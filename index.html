@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>좌표 어디더라</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar" id="topbar" hidden>
+  <div class="topbar-in">
+    <button class="brand" id="brand" type="button" aria-label="좌표 어디더라 맨 위로"><span class="lg" aria-hidden="true">?</span><span>좌표 어디더라</span></button>
+    <span class="who" id="who-badge"></span>
+    <button class="btn" id="chip" type="button" aria-expanded="false" aria-controls="pop"><span class="dot" id="dot"></span>서버 주소</button>
+    <button class="btn" id="navbtn" type="button">인벤토리</button>
+  </div>
+  <div class="pop panel" id="pop" role="dialog" aria-label="서버 주소" hidden>
+    <h2>서버 주소 <span id="sv-when"></span></h2>
+    <label for="sv-addr" class="sr-only">마크 서버 주소</label>
+    <div class="fr"><input class="field" id="sv-addr" readonly autocomplete="off"><button class="btn" type="button" id="sv-copy">복사</button></div>
+    <div class="fr end"><button class="btn" type="button" id="sv-close">닫기</button></div>
+  </div>
+</header>
+
+<section class="login" id="v-login">
+  <div class="login-box">
+    <div class="logo-big" aria-hidden="true">?</div>
+    <h1 class="title">좌표 어디더라</h1>
+    <p class="tag">좌표 아는 사람?</p>
+    <form class="panel" id="login-form" novalidate>
+      <label for="l-pw"><span>방 비번</span></label>
+      <input class="field" id="l-pw" type="password" autocomplete="off">
+      <label for="l-name" style="margin-top:10px"><span>이름 (마크 아이디)</span></label>
+      <input class="field" id="l-name" type="text" autocomplete="off" maxlength="16">
+      <div class="err" id="l-err" role="alert" hidden></div>
+      <button class="btn primary" id="l-btn" type="submit" style="width:100%;margin:12px 0 0">여기 다 있음</button>
+    </form>
+  </div>
+</section>
+
+<main id="v-list" hidden>
+  <div class="wrap">
+    <div class="toolbar">
+      <label class="sr-only" for="q">검색</label>
+      <input class="field" id="q" type="search" placeholder="검색" autocomplete="off">
+      <button class="btn" type="button" id="catbtn" aria-expanded="false" aria-controls="catpanel">종류: 전체</button>
+      <select class="field" id="whosel" aria-label="등록한 사람"></select>
+      <button class="btn primary" type="button" id="addbtn">+ 좌표 추가</button>
+      <div class="catpanel panel" id="catpanel" hidden>
+        <div class="fr"><button class="btn" type="button" id="cat-all">전체 선택</button><button class="btn" type="button" id="cat-none">전체 해제</button></div>
+        <div class="catgrid" id="catgrid"></div>
+      </div>
+    </div>
+    <div class="count" id="count" aria-live="polite"></div>
+    <div id="list"></div>
+    <div class="empty" id="empty" hidden>아무것도 찾지 못했습니다. 직접 탐험하고 좌표를 남기세요.</div>
+  </div>
+</main>
+
+<main id="v-inv" hidden>
+  <div class="inv">
+    <div class="panel invpanel">
+      <div class="invtop">
+        <div class="armor" id="armor"></div>
+        <div class="char"><canvas id="skin" width="16" height="32" role="img" aria-label="내 캐릭터"></canvas></div>
+        <div class="craft">
+          <div class="nick" id="inv-nick"></div>
+          <div class="ln"><span>내 좌표</span><b id="c-mine">0</b></div>
+          <div class="ln"><span>주운 좌표</span><b id="c-scrap">0</b></div>
+          <div class="ln"><span>핫바 대표</span><b id="c-hot">0 / 9</b></div>
+          <div class="ln"><span>전체 좌표</span><b id="c-all">0</b></div>
+        </div>
+      </div>
+      <div class="skinbar"><button class="btn" type="button" id="skinbtn">스킨 바꾸기</button></div>
+      <div class="invgrid">
+        <div class="bagwrap" id="bagwrap" tabindex="-1"><div class="slots" id="bag"></div></div>
+        <div class="slots hot" id="hot"></div>
+      </div>
+      <div class="legend"><span><i class="m"></i>내 좌표</span><span><i class="s"></i>주운 좌표</span></div>
+      <div class="infobar" id="infobar" aria-live="polite"></div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-root"></div>
+<div class="tip" id="tip" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

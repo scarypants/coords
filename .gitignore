@@ -1,0 +1,5 @@
+# 비밀 값과 방장 전용 SQL. 공개 저장소에 올리지 않는다
+.env
+admin.sql
+# 이 PC의 도구 설정
+.claude/

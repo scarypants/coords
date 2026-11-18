@@ -1,0 +1,242 @@
+-- 좌표 어디더라 — Supabase 스키마
+-- Supabase 대시보드의 SQL Editor에 통째로 붙여넣고 Run. 여러 번 실행해도 안전하다(이미 있는 것은 건드리지 않음).
+-- 방 비번은 이 파일에 없다. 실행 후 SQL Editor에서 `select set_room_password('비번');` 으로 설정한다.
+
+create extension if not exists pgcrypto with schema extensions;
+
+-- ===================== 방 비번, 멤버 =====================
+
+create table if not exists room_secret (
+  id int primary key default 1 check (id = 1),
+  pw_hash text not null,                       -- bcrypt 해시. 클라이언트에는 절대 안 내려감
+  fail_count int not null default 0,
+  lock_level int not null default 0,
+  locked_until timestamptz
+);
+alter table room_secret enable row level security;   -- 정책이 없으므로 아무도 직접 못 읽음
+revoke all on room_secret from anon, authenticated;
+
+create table if not exists members (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  display_name text not null check (char_length(display_name) between 1 and 16),
+  joined_at timestamptz not null default now()
+);
+alter table members enable row level security;       -- 정책 없음: 함수(SECURITY DEFINER)로만 접근
+revoke all on members from anon, authenticated;
+
+-- 내 이름. 멤버가 아니면 null. RLS 정책과 클라이언트가 같이 쓴다.
+create or replace function current_name() returns text
+language sql stable security definer set search_path = public as
+$$ select display_name from members where user_id = auth.uid() $$;
+
+-- ===================== 좌표 =====================
+
+create table if not exists places (
+  id bigint generated always as identity primary key,
+  category text not null check (char_length(category) between 1 and 32),
+  name text not null check (char_length(name) between 1 and 40),
+  dimension text not null check (dimension in ('overworld', 'nether', 'end')),
+  x integer not null check (x between -30000000 and 30000000),
+  y integer check (y between -4096 and 4096),
+  z integer not null check (z between -30000000 and 30000000),
+  note text not null default '' check (char_length(note) <= 200),
+  owner_name text not null check (char_length(owner_name) between 1 and 16),
+  is_private boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists places_owner_idx on places (owner_name);
+
+-- 시각은 서버가 정한다. 등록자와 등록 시각은 수정 못 함.
+create or replace function places_guard() returns trigger language plpgsql as $$
+begin
+  new.updated_at := now();
+  if tg_op = 'INSERT' then
+    new.created_at := now();
+  else
+    new.created_at := old.created_at;
+    new.owner_name := old.owner_name;
+  end if;
+  return new;
+end $$;
+drop trigger if exists places_guard on places;
+create trigger places_guard before insert or update on places for each row execute function places_guard();
+
+alter table places enable row level security;
+drop policy if exists places_select on places;
+drop policy if exists places_insert on places;
+drop policy if exists places_update on places;
+drop policy if exists places_delete on places;
+-- 멤버만 보고, 남의 비공개 좌표는 숨긴다
+create policy places_select on places for select to authenticated
+  using ((select current_name()) is not null and (not is_private or owner_name = (select current_name())));
+create policy places_insert on places for insert to authenticated
+  with check (owner_name = (select current_name()));
+create policy places_update on places for update to authenticated
+  using (owner_name = (select current_name())) with check (owner_name = (select current_name()));
+create policy places_delete on places for delete to authenticated
+  using (owner_name = (select current_name()));
+
+-- ===================== 나침반(스크랩) =====================
+
+create table if not exists bookmarks (
+  owner_name text not null check (char_length(owner_name) between 1 and 16),
+  place_id bigint not null references places (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (owner_name, place_id)
+);
+alter table bookmarks enable row level security;
+drop policy if exists bookmarks_select on bookmarks;
+drop policy if exists bookmarks_insert on bookmarks;
+drop policy if exists bookmarks_delete on bookmarks;
+create policy bookmarks_select on bookmarks for select to authenticated using (owner_name = (select current_name()));
+create policy bookmarks_insert on bookmarks for insert to authenticated with check (owner_name = (select current_name()));
+create policy bookmarks_delete on bookmarks for delete to authenticated using (owner_name = (select current_name()));
+
+-- ===================== 인벤토리 칸 배치 =====================
+
+create table if not exists inventory_layout (
+  owner_name text primary key check (char_length(owner_name) between 1 and 16),
+  layout jsonb not null default '{}'::jsonb check (pg_column_size(layout) < 20000),
+  updated_at timestamptz not null default now()
+);
+create or replace function touch_updated_at() returns trigger language plpgsql as $$
+begin new.updated_at := now(); return new; end $$;
+drop trigger if exists inventory_layout_touch on inventory_layout;
+create trigger inventory_layout_touch before insert or update on inventory_layout for each row execute function touch_updated_at();
+
+alter table inventory_layout enable row level security;
+drop policy if exists inventory_select on inventory_layout;
+drop policy if exists inventory_insert on inventory_layout;
+drop policy if exists inventory_update on inventory_layout;
+create policy inventory_select on inventory_layout for select to authenticated using (owner_name = (select current_name()));
+create policy inventory_insert on inventory_layout for insert to authenticated with check (owner_name = (select current_name()));
+create policy inventory_update on inventory_layout for update to authenticated
+  using (owner_name = (select current_name())) with check (owner_name = (select current_name()));
+
+-- ===================== 서버 주소 (한 줄짜리) =====================
+-- 앱은 읽기만 한다. 바꾸기 (SQL Editor 전용):  select set_server_address('123.45.67.89:25565');
+-- 바꾸면 접속 중인 사람에게 Realtime으로 "서버 주소가 바뀌었습니다"가 뜬다.
+
+create table if not exists server_info (
+  id int primary key default 1 check (id = 1),
+  server_addr text not null default '' check (char_length(server_addr) <= 100),
+  updated_at timestamptz not null default now()
+);
+insert into server_info (id) values (1) on conflict do nothing;
+
+-- 예전 버전(하마치, 앱에서 수정)의 흔적 정리
+alter table server_info drop column if exists hamachi_name, drop column if exists hamachi_pw, drop column if exists updated_by;
+drop trigger if exists server_info_guard on server_info;
+drop function if exists server_info_guard();
+drop policy if exists server_info_update on server_info;
+
+alter table server_info enable row level security;
+drop policy if exists server_info_select on server_info;
+create policy server_info_select on server_info for select to authenticated using ((select current_name()) is not null);
+
+create or replace function set_server_address(p_addr text) returns void language sql as $$
+  update server_info set server_addr = btrim(p_addr), updated_at = now() where id = 1;
+$$;
+revoke all on function set_server_address(text) from public, anon, authenticated;
+
+-- ===================== 방 비번 검증, 입장 =====================
+
+-- 비번 확인 + 전역 잠금. 방 전체에서 연속 5회 틀리면 1분, 반복되면 2, 4, 8, 최대 15분.
+-- 예외를 던지면 실패 횟수 기록이 롤백되므로 결과는 항상 jsonb로 돌려준다.
+create or replace function check_room_password(p_password text) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare rs room_secret%rowtype; secs int;
+begin
+  select * into rs from room_secret where id = 1 for update;
+  if not found then return jsonb_build_object('status', 'not_configured'); end if;
+  if rs.locked_until is not null and rs.locked_until > now() then
+    return jsonb_build_object('status', 'locked', 'retry_after', ceil(extract(epoch from rs.locked_until - now()))::int);
+  end if;
+  if rs.pw_hash = crypt(coalesce(p_password, ''), rs.pw_hash) then
+    update room_secret set fail_count = 0, lock_level = 0, locked_until = null where id = 1;
+    return jsonb_build_object('status', 'ok');
+  end if;
+  if rs.fail_count + 1 >= 5 then
+    secs := least(60 * power(2, least(rs.lock_level, 4))::int, 900);
+    update room_secret set fail_count = 0, lock_level = lock_level + 1,
+      locked_until = now() + make_interval(secs => secs) where id = 1;
+    return jsonb_build_object('status', 'locked', 'retry_after', secs);
+  end if;
+  update room_secret set fail_count = fail_count + 1 where id = 1;
+  return jsonb_build_object('status', 'wrong', 'left', 4 - rs.fail_count);
+end $$;
+revoke all on function check_room_password(text) from public, anon, authenticated;
+
+create or replace function join_room(p_password text, p_name text) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare nm text := btrim(coalesce(p_name, '')); r jsonb;
+begin
+  if auth.uid() is null then return jsonb_build_object('status', 'no_auth'); end if;
+  if char_length(nm) not between 1 and 16 then return jsonb_build_object('status', 'bad_name'); end if;
+  r := check_room_password(p_password);
+  if r->>'status' <> 'ok' then return r; end if;
+  insert into members (user_id, display_name) values (auth.uid(), nm)
+    on conflict (user_id) do update set display_name = excluded.display_name;
+  return jsonb_build_object('status', 'ok', 'name', nm);
+end $$;
+
+-- 예전 버전의 "앱에서 방 비번 바꾸기" 함수. 지금은 SQL Editor에서만 바꾸므로 지운다
+drop function if exists change_room_password(text, text);
+
+-- 방 비번 설정, 변경, 분실 복구 (SQL Editor 전용):  select set_room_password('새 비번');
+-- 바꾸면 모든 멤버가 지워져 전원 새 비번으로 다시 입장한다.
+create or replace function set_room_password(p_new text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if char_length(coalesce(p_new, '')) not between 4 and 72 then
+    raise exception '방 비번은 4~72자여야 합니다';
+  end if;
+  insert into room_secret (id, pw_hash) values (1, crypt(p_new, gen_salt('bf')))
+    on conflict (id) do update set pw_hash = excluded.pw_hash, fail_count = 0, lock_level = 0, locked_until = null;
+  delete from members where true;
+end $$;
+revoke all on function set_room_password(text) from public, anon, authenticated;
+
+-- 앱이 부를 수 있는 함수는 로그인한(익명 포함) 사용자만
+revoke all on function current_name(), join_room(text, text) from public, anon;
+grant execute on function current_name(), join_room(text, text) to authenticated;
+revoke all on places, bookmarks, inventory_layout, server_info from anon;
+
+-- ===================== 갑옷 (방장이 SQL Editor에서만 준다) =====================
+-- 주기:   select give_armor('철수', 'helmet', 'diamond');
+-- 뺏기:   select take_armor('철수', 'helmet');
+-- 부위: helmet, chestplate, leggings, boots / 재료: leather, chainmail, iron, gold, diamond, netherite
+
+create table if not exists armor (
+  owner_name text not null check (char_length(owner_name) between 1 and 16),
+  slot text not null check (slot in ('helmet', 'chestplate', 'leggings', 'boots')),
+  material text not null check (material in ('leather', 'chainmail', 'iron', 'gold', 'diamond', 'netherite')),
+  given_at timestamptz not null default now(),
+  primary key (owner_name, slot)
+);
+alter table armor enable row level security;
+drop policy if exists armor_select on armor;
+create policy armor_select on armor for select to authenticated using (owner_name = (select current_name()));
+revoke all on armor from anon;
+
+create or replace function give_armor(p_name text, p_slot text, p_material text) returns void language sql as $$
+  insert into armor (owner_name, slot, material) values (p_name, p_slot, p_material)
+  on conflict (owner_name, slot) do update set material = excluded.material, given_at = now();
+$$;
+create or replace function take_armor(p_name text, p_slot text) returns void language sql as $$
+  delete from armor where owner_name = p_name and slot = p_slot;
+$$;
+revoke all on function give_armor(text, text, text), take_armor(text, text) from public, anon, authenticated;
+
+-- ===================== Realtime =====================
+-- 접속 중인 사람에게 변경을 알린다. 이벤트를 받으면 클라이언트가 목록을 다시 조회한다.
+do $$
+declare t text;
+begin
+  foreach t in array array['places', 'server_info'] loop
+    if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
+  end loop;
+end $$;

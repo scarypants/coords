@@ -1,0 +1,339 @@
+/* 좌표 어디더라 스타일. 색, 폰트, 배경은 아래 :root 토큰에서만 바꾸고 규칙에는 색 값을 직접 쓰지 않는다.
+   지금은 크리스마스 테마: 눈 같은 흰 바탕, 전나무 초록 상단 바, 빨강(--accent)은 강조에만.
+   예전 분홍 테마로 돌아가려면: --accent #d6336c, --accent-hover #c02459, --accent-soft #fde6ee,
+   --bar rgba(255,255,255,.94), --bar-line #e6e0e3, --bar-text #2b2428, --bar-me #2b8a3e, --snow-a/--snow-b none */
+:root {
+  /* ----- 배경 -----
+     마크 스크린샷을 assets/bg.jpg 로 넣으면 그대로 배경이 된다 (없으면 아래 --bg 색과 체크무늬).
+     다른 이름이나 PNG를 쓰려면 아래 주소만 바꾼다.
+     --bg-veil 은 글씨가 읽히도록 배경 위에 덮는 막. 사진이 진하면 뒤 숫자(투명도)를 .7 정도로 올린다. */
+  --bg-image: url('../assets/bg.jpg');
+  --bg-veil: rgba(248, 246, 241, .55);
+  --bg: #f7f4ee;                         /* 이미지가 없을 때의 바탕색 */
+  --bg-check: rgba(90, 80, 60, .035);    /* 바탕의 체크무늬 */
+
+  /* 내리는 눈: 네모난 픽셀 눈 두 겹 (속도가 달라 보이게 크기가 다른 타일). 끄려면 둘 다 none */
+  --snow-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' shape-rendering='crispEdges'%3E%3Cg fill='%23fff' fill-opacity='.9'%3E%3Crect x='24' y='30' width='4' height='4'/%3E%3Crect x='130' y='92' width='4' height='4'/%3E%3Crect x='78' y='158' width='4' height='4'/%3E%3C/g%3E%3C/svg%3E");
+  --snow-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' shape-rendering='crispEdges'%3E%3Cg fill='%23fff' fill-opacity='.7'%3E%3Crect x='60' y='40' width='6' height='6'/%3E%3Crect x='220' y='170' width='6' height='6'/%3E%3Crect x='150' y='260' width='3' height='3'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* 글자 */
+  --text: #2a2a26;
+  --text-dim: #74705f;
+  --accent: #c8322b;       /* 크리스마스 빨강: 좌표 숫자, 주요 버튼, 선택 표시, 포커스 테두리 */
+  --accent-hover: #a8251f;
+  --accent-soft: #fbe9e6;  /* 선택된 항목의 연한 빨강 바탕 */
+  --logo: #c8322b;         /* 입장 화면의 큰 물음표 로고 */
+  --me: #1f7a4d;          /* 전나무 초록: 내 이름, 내 좌표 표시 */
+  --notice: #f2c94c;       /* 서버 정보가 바뀌었을 때 깜빡이는 점 (금색) */
+
+  /* 면 */
+  --surface: #ffffff;                    /* 좌표 한 줄 */
+  --surface-line: #e4e0d6;
+  --bar: #1d4a37;                        /* 상단 바: 진한 전나무 초록 */
+  --bar-line: #d4a72c;                   /* 상단 바 아래 금색 줄 */
+  --bar-text: #fdf8ec;
+  --bar-me: #f2c94c;                     /* 상단 바의 내 이름 */
+  --panel: #ffffff;                      /* 창 */
+  --panel-hi: #ffffff;
+  --panel-lo: #cfc7cb;
+  --outline: #6f6469;                    /* 버튼과 창의 바깥 테두리 */
+  --overlay: rgba(30, 22, 26, .4);       /* 창 뒤를 가리는 막 */
+
+  /* 버튼: 기본은 밝은 돌색, 주요 버튼만 분홍 */
+  --btn: #ece8ea;
+  --btn-hover: #dfd9dc;
+  --btn-text: #2b2428;
+  --bevel-hi: #ffffff;
+  --bevel-lo: #b8afb3;
+  --btn-strong-text: #ffffff;            /* 분홍, 빨강 버튼 위의 글자 */
+  --bad: #c94a4a;
+  --bad-hover: #b23a3a;
+  --chip-off: #f3f0f1;                   /* 종류 선택 창에서 해제된 항목 */
+
+  /* 입력칸 */
+  --field: #ffffff;
+  --field-line: #cfc7cb;
+  --err-bg: #fdeaea;
+  --err-text: #9b2226;
+
+  /* 아이템 칸 */
+  --slot-bg: #ece8ea;
+  --slot-dark: #b8afb3;
+  --slot-light: #ffffff;
+
+  --gold: #e0a800;         /* 주운 좌표(나침반) 테두리 */
+  --char-bg: #2b2428;      /* 인벤토리의 캐릭터 창 */
+
+  /* 갑옷 재료 */
+  --armor-leather: #a86a3d;
+  --armor-chainmail: #9a9a9a;
+  --armor-iron: #d8d8d8;
+  --armor-gold: #f2c230;
+  --armor-diamond: #5fd3d3;
+  --armor-netherite: #4a4246;
+
+  /* 책 페이지 상세 창 */
+  --book: #f7efd9;
+  --book-line: #cdb98c;
+  --book-ink: #4a3a22;
+  --book-dim: #8a744c;
+
+  /* 인벤토리 호버 툴팁 (마크의 보라색 툴팁) */
+  --tip-bg: rgba(22, 8, 26, .95);
+  --tip-line: #3a1470;
+  --tip-text: #ffffff;
+  --tip-dim: #ffb3d0;
+  --tip-mine: #7ee08a;
+  --tip-scrap: #ffd766;
+
+  /* 차원 배지 */
+  --dim-overworld: #4c9a3a;
+  --dim-nether: #c0392b;
+  --dim-end: #7a5bc0;
+
+  /* 알림 */
+  --toast-bg: #2b2428;
+  --toast-text: #ffffff;
+  --flash: #fde6ee;
+
+  --font-pixel: 'Galmuri11', 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  color-scheme: light;
+}
+
+@font-face {
+  font-family: 'Galmuri11';
+  src: url('../assets/fonts/Galmuri11.woff2') format('woff2');
+  font-display: swap;
+}
+
+/* ===== 기본 ===== */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: var(--bg-image) center/cover no-repeat; pointer-events: none; }
+body::after { content: ''; position: fixed; inset: 0; z-index: -1; background: var(--bg-veil); pointer-events: none; } /* 글씨가 읽히도록 덮는 막 */
+/* 내리는 눈. 내용 뒤에만 보인다. 타일 크기(200, 300)의 최소공배수 600px만큼 내려가면 처음과 같은 모양이라 끊김 없이 반복된다.
+   화면 전체를 다시 그리지 않도록 배경 위치 대신 transform으로 움직인다 */
+html::after { content: ''; position: fixed; left: 0; right: 0; top: -600px; bottom: 0; z-index: -1; pointer-events: none; background: var(--snow-a), var(--snow-b); animation: snow 30s linear infinite; }
+@keyframes snow { to { transform: translateY(600px); } }
+body {
+  font-family: var(--font-pixel); font-size: 16px; line-height: 1.5; color: var(--text);
+  background-color: var(--bg);
+  background-image: linear-gradient(45deg, var(--bg-check) 25%, transparent 25%, transparent 75%, var(--bg-check) 75%), linear-gradient(45deg, var(--bg-check) 25%, transparent 25%, transparent 75%, var(--bg-check) 75%);
+  background-size: 48px 48px; background-position: 0 0, 24px 24px;
+  min-height: 100vh; padding-bottom: 84px;
+}
+b, strong { font-weight: normal; }
+button, input, select, textarea { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+svg { display: block; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 아이콘: PNG든 임시 SVG든 부모 크기에 맞춘다. 부모 크기는 16의 배수(32, 48, 96)로 */
+.ico { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.ico text { fill: #fff; stroke: #000; stroke-opacity: .6; stroke-width: 1.5; paint-order: stroke; font-family: var(--font-pixel); }
+
+/* 아이템 칸 틀 (인벤토리 칸과 같은 모양). 안쪽이 48px이 되도록 54px */
+.slot-frame { width: 54px; height: 54px; flex: none; background: var(--slot-bg); border: 3px solid; border-color: var(--slot-dark) var(--slot-light) var(--slot-light) var(--slot-dark); }
+.slot-frame.small { width: 38px; height: 38px; } /* 안쪽 32px */
+
+@media (prefers-reduced-motion: reduce) {
+  *, html::after { animation: none !important; }
+}
+
+/* ===== 베벨 UI (버튼, 입력칸, 창) ===== */
+/* 마크 느낌의 베벨 UI. 순수 CSS */
+.btn { cursor: pointer; background: var(--btn); color: var(--btn-text); border: 3px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi); outline: 2px solid var(--outline); padding: 2px 12px; min-height: 44px; margin: 2px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
+.btn:hover { background: var(--btn-hover); }
+.btn:active { border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo); }
+.btn:disabled { opacity: .5; cursor: default; }
+/* 주요 버튼(분홍)과 위험 버튼(빨강)은 테두리를 같은 색의 밝고 어두운 톤으로 */
+.btn.primary, .btn.danger { color: var(--btn-strong-text); border-color: rgba(255, 255, 255, .45) rgba(0, 0, 0, .25) rgba(0, 0, 0, .25) rgba(255, 255, 255, .45); }
+.btn.primary { background: var(--accent); }
+.btn.primary:hover { background: var(--accent-hover); }
+.btn.danger { background: var(--bad); }
+.btn.danger:hover { background: var(--bad-hover); }
+
+.field { width: 100%; min-height: 44px; background: var(--field); color: var(--text); border: 3px solid var(--field-line); padding: 6px 10px; border-radius: 0; }
+.field:focus { border-color: var(--accent); outline: none; }
+.field::placeholder { color: var(--text-dim); }
+label { display: block; }
+
+.panel { background: var(--panel); color: var(--text); border: 4px solid; border-color: var(--panel-hi) var(--panel-lo) var(--panel-lo) var(--panel-hi); outline: 3px solid var(--outline); padding: 14px; }
+.err { color: var(--err-text); background: var(--err-bg); border: 2px solid var(--bad); padding: 6px 10px; margin: 8px 0 0; }
+.badge { padding: 0 6px; color: #fff; border: 2px solid var(--outline); font-size: 12px; }
+
+/* ===== 입장 화면 ===== */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+.login-box { width: min(380px, 100%); display: grid; gap: 14px; justify-items: center; text-align: center; }
+/* 로고: 픽셀 폰트 물음표 한 글자. Galmuri11은 11px 격자라 11의 배수(88px)에서 가장 또렷하다 */
+.logo-big { font-size: 88px; line-height: 1; color: var(--logo); text-shadow: 4px 4px 0 var(--panel-hi); }
+.title { font-size: 34px; line-height: 1.2; color: var(--text); text-shadow: 3px 3px 0 var(--panel-hi); margin: 0; }
+.tag { color: var(--accent); margin: 0 0 6px; text-shadow: 2px 2px 0 var(--panel-hi); }
+.login form { width: 100%; text-align: left; }
+.login label span { display: block; margin-bottom: 4px; }
+
+/* ===== 상단 바, 서버 주소 ===== */
+.topbar { position: sticky; top: 0; z-index: 20; background: var(--bar); border-bottom: 4px solid var(--bar-line); }
+.topbar-in { max-width: 960px; margin: 0 auto; padding: 6px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; background: none; border: 0; padding: 0; cursor: pointer; color: var(--bar-text); font-size: 20px; text-shadow: 2px 2px 0 rgba(0, 0, 0, .35); min-height: 44px; }
+.brand .lg { font-size: 33px; line-height: 1; color: var(--bar-me); } /* 로고 물음표. 11의 배수 */
+.who { color: var(--bar-me); font-size: 14px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; }
+.dot { width: 12px; height: 12px; background: var(--bevel-lo); box-shadow: 0 0 0 2px var(--outline); flex: none; }
+.dot.on { background: var(--notice); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .25; } }
+
+/* 서버 정보 창 (모바일에서는 아래에서 올라오는 시트) */
+.pop { position: absolute; right: 16px; top: 100%; margin-top: 8px; width: min(380px, calc(100vw - 32px)); z-index: 30; }
+.pop h2 { margin: 0 0 8px; font-size: 18px; font-weight: normal; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.pop h2 span { font-size: 13px; color: var(--text-dim); }
+.pop label { margin: 8px 0 2px; font-size: 14px; }
+.fr { display: flex; gap: 6px; align-items: center; }
+.fr.end { justify-content: flex-end; margin-top: 12px; }
+.flash { animation: flash 1.4s steps(2) 2; }
+@keyframes flash { 50% { background: var(--flash); } }
+@media (prefers-reduced-motion: reduce) { .flash { background: var(--flash); } }
+
+@media (max-width: 600px) {
+  .pop { position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; margin: 0; max-height: 90vh; overflow: auto; }
+  .brand { font-size: 18px; }
+}
+
+/* ===== 좌표 목록 ===== */
+.wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
+
+/* 검색 + 종류 + 추가를 한 줄에 */
+.toolbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; position: relative; margin-bottom: 10px; }
+.toolbar .field { flex: 1 1 200px; width: auto; }
+.toolbar select.field { flex: 0 1 150px; }
+.catpanel { position: absolute; left: 0; top: 100%; margin-top: 8px; z-index: 15; width: min(560px, 100%); max-height: 70vh; overflow: auto; }
+.catgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; margin: 10px 0; }
+.catopt { display: flex; align-items: center; gap: 8px; padding: 3px 8px 3px 3px; min-height: 44px; background: var(--chip-off); border: 3px solid var(--panel-lo); color: var(--text-dim); cursor: pointer; text-align: left; }
+.catopt .ci { opacity: .5; }
+.catopt[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+.catopt[aria-pressed="true"] .ci { opacity: 1; }
+
+.count { color: var(--text); font-size: 14px; margin: 0 2px 8px; text-shadow: 1px 1px 0 var(--panel-hi); } /* 배경 사진 위에서도 읽히게 */
+
+/* 좌표 한 줄: 아이콘 | 이름과 정보 | 좌표 | 버튼 */
+.row { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto auto; grid-template-areas: "ic main coords act"; gap: 0 14px; align-items: center; padding: 8px 10px; margin-bottom: 6px; background: var(--surface); border: 3px solid var(--surface-line); border-left-width: 6px; }
+.row.mine { border-left-color: var(--me); }
+.row .ic { grid-area: ic; }
+.row .main { grid-area: main; min-width: 0; }
+.row { cursor: pointer; }
+.row:hover { border-color: var(--accent); }
+.row.mine:hover { border-left-color: var(--me); }
+.row .nm { font-size: 17px; overflow-wrap: anywhere; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; display: block; max-width: 100%; }
+/* 나침반 버튼: 주우면 색이 살아나고, 안 주웠으면 회색 */
+.btn.compass { width: 48px; padding: 0; }
+.btn.compass .cico { width: 32px; height: 32px; }
+.btn.compass[aria-pressed="false"] .cico { filter: grayscale(1) brightness(.7); opacity: .7; }
+.row .coords { grid-area: coords; color: var(--accent); font-size: 18px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.row .act { grid-area: act; display: flex; gap: 2px; align-items: center; justify-content: flex-end; min-width: 232px; } /* 수정, X 버튼이 없는 줄도 좌표 열이 어긋나지 않게 */
+.meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--text-dim); }
+.dimtag { display: inline-flex; align-items: center; }
+.dimtag .ico { width: 16px; height: 16px; } /* 차원 아이콘은 1배. 배지 글자와 같은 높이 */
+.d-overworld { background: var(--dim-overworld); }
+.d-nether { background: var(--dim-nether); }
+.d-end { background: var(--dim-end); }
+.lock { color: var(--bad); }
+.empty { padding: 28px 16px; text-align: center; color: var(--accent); background: var(--surface); border: 3px dashed var(--surface-line); }
+
+@media (max-width: 700px) {
+  .row { grid-template-columns: 54px minmax(0, 1fr); grid-template-areas: "ic main" "coords coords" "act act"; gap: 4px 12px; }
+  .row .coords { text-align: left; }
+  .row .act { min-width: 0; justify-content: flex-start; }
+}
+
+/* ===== 창, 알림 ===== */
+.overlay { position: fixed; inset: 0; background: var(--overlay); display: grid; place-items: center; z-index: 50; padding: 16px; overflow-x: hidden; overflow-y: auto; }
+.modal { width: min(460px, 100%); }
+.modal h2 { margin: 0 0 10px; font-size: 20px; font-weight: normal; }
+.modal label { margin: 8px 0 2px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.radios { display: flex; gap: 6px; flex-wrap: wrap; }
+.radios label { display: flex; align-items: center; gap: 6px; margin: 0; min-height: 44px; padding: 0 10px; background: var(--slot-bg); border: 2px solid var(--panel-lo); cursor: pointer; }
+.radios input { width: 18px; height: 18px; accent-color: var(--accent); }
+.chk { display: flex !important; align-items: center; gap: 8px; min-height: 44px; }
+.chk input { width: 20px; height: 20px; accent-color: var(--accent); }
+.actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--toast-bg); color: var(--toast-text); border: 3px solid var(--outline); outline: 2px solid var(--panel-hi); padding: 8px 16px; z-index: 90; max-width: 92vw; text-align: center; }
+
+/* ===== 책 페이지 상세 ===== */
+/* 책 페이지 모양의 좌표 상세 창 */
+.book { position: relative; width: min(440px, 100%); background: var(--book); color: var(--book-ink); border: 4px solid var(--book-line); outline: 3px solid var(--outline); padding: 20px 18px 16px 44px; }
+/* 왼쪽의 제본 구멍 */
+.book::before { content: ''; position: absolute; left: 14px; top: 16px; bottom: 16px; width: 12px; background: radial-gradient(circle at 50% 50%, var(--accent) 0 5px, transparent 5.5px) 0 0 / 12px 28px repeat-y; }
+.bk-h { display: flex; gap: 12px; align-items: center; }
+.bk-t { font-size: 20px; line-height: 1.3; overflow-wrap: anywhere; }
+.bk-s { font-size: 14px; color: var(--book-dim); }
+.bk-c { font-size: 24px; margin: 14px 0 2px; font-variant-numeric: tabular-nums; color: var(--accent); }
+.bk-v { font-size: 14px; color: var(--book-dim); font-variant-numeric: tabular-nums; }
+.bk-n { margin: 12px 0; min-height: 44px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bk-m { font-size: 13px; color: var(--book-dim); }
+.bk-a { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 12px; }
+
+/* ===== 인벤토리 ===== */
+/* 인벤토리. 칸 크기는 두 가지뿐이다 (아이콘이 16px의 정수 배가 되도록):
+   폰: 칸 36px(테두리 2px) 안에 아이콘 32px(2배). 폭 360px 폰에도 9칸이 들어간다
+   넓은 화면: 칸 54px(테두리 3px) 안에 아이콘 48px(3배)
+   9칸이 한 줄에 들어가야 해서 칸은 터치 대상 44px 규칙의 예외다 */
+.inv { --slot: 36px; --slot-b: 2px; --slot-ico: 32px; --char-h: 128px; --sbar: 14px; max-width: 580px; margin: 0 auto; padding: 12px 2px; }
+.invpanel { padding: 6px 2px; }
+@media (min-width: 600px) {
+  .inv { --slot: 54px; --slot-b: 3px; --slot-ico: 48px; --char-h: 192px; padding: 16px; }
+  .invpanel { padding: 14px; }
+}
+
+.invtop, .invgrid { width: calc(var(--slot) * 9 + var(--sbar)); max-width: 100%; margin: 0 auto; }
+.invtop { display: flex; gap: 6px; align-items: stretch; margin-bottom: 8px; padding-right: var(--sbar); }
+.armor { display: grid; align-content: space-between; }
+.char { flex: none; background: var(--char-bg); border: var(--slot-b) solid; border-color: var(--slot-dark) var(--slot-light) var(--slot-light) var(--slot-dark); display: grid; place-items: center; padding: 0 8px; }
+.char canvas { height: var(--char-h); width: calc(var(--char-h) / 2); image-rendering: pixelated; } /* 16x32 캔버스의 정수 배 */
+.craft { flex: 1; min-width: 0; background: var(--slot-bg); border: var(--slot-b) solid; border-color: var(--slot-dark) var(--slot-light) var(--slot-light) var(--slot-dark); padding: 6px 8px; display: grid; align-content: center; gap: 2px; font-size: 14px; }
+.craft .nick { font-size: 17px; color: var(--me); margin-bottom: 4px; word-break: break-all; }
+.craft .ln { display: flex; justify-content: space-between; gap: 8px; }
+
+.slots { display: grid; grid-template-columns: repeat(9, var(--slot)); }
+.slot { width: var(--slot); height: var(--slot); background: var(--slot-bg); border: var(--slot-b) solid; border-color: var(--slot-dark) var(--slot-light) var(--slot-light) var(--slot-dark); display: grid; place-items: center; position: relative; padding: 0; cursor: pointer; border-radius: 0; scroll-snap-align: start; }
+.slot .ico { width: var(--slot-ico); height: var(--slot-ico); }
+.slot.mine { border-color: var(--me); }      /* 내 좌표: 초록 테두리 */
+.slot.scrap { border-color: var(--gold); }   /* 주운 좌표: 금색 테두리 */
+.slot.sel { outline: 3px solid var(--accent); outline-offset: 0; z-index: 1; }
+.slot.deco { cursor: pointer; }
+.slot.deco.empty .ico { opacity: .3; }
+/* 받은 갑옷: 재료 색으로 칸 바탕과 테두리를 칠한다 */
+.armor-leather { --mat: var(--armor-leather); } .armor-chainmail { --mat: var(--armor-chainmail); } .armor-iron { --mat: var(--armor-iron); }
+.armor-gold { --mat: var(--armor-gold); } .armor-diamond { --mat: var(--armor-diamond); } .armor-netherite { --mat: var(--armor-netherite); }
+.slot.deco[class*="armor-"] { background: var(--mat); border-color: var(--mat); }
+.skinbar { width: calc(var(--slot) * 9 + var(--sbar)); max-width: 100%; margin: 0 auto 8px; }
+.skingrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+.skinopt { display: grid; justify-items: center; gap: 4px; padding: 8px; min-height: 44px; background: var(--chip-off); border: 3px solid var(--panel-lo); cursor: pointer; }
+.skinopt[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.skinopt canvas { width: 48px; height: 96px; image-rendering: pixelated; }
+.slot .num { position: absolute; left: 1px; top: -1px; font-size: 10px; line-height: 1.2; color: var(--text); text-shadow: 1px 0 0 var(--slot-light), -1px 0 0 var(--slot-light), 0 1px 0 var(--slot-light), 0 -1px 0 var(--slot-light); z-index: 1; pointer-events: none; }
+
+/* 가방: 3줄만 보이고 나머지는 세로 스크롤. 한 줄씩 딱딱 멈춘다. 핫바는 스크롤과 무관하게 바로 아래에 붙는다 */
+.bagwrap { height: calc(var(--slot) * 3); overflow-y: scroll; overflow-x: hidden; scroll-snap-type: y mandatory; overscroll-behavior: contain; }
+.bagwrap::-webkit-scrollbar { width: var(--sbar); }
+.bagwrap::-webkit-scrollbar-track { background: var(--slot-bg); border: 2px solid; border-color: var(--slot-dark) var(--slot-light) var(--slot-light) var(--slot-dark); }
+.bagwrap::-webkit-scrollbar-thumb { background: var(--btn); border: 2px solid; border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi); outline: 1px solid var(--outline); }
+/* shortcut: 파이어폭스와 iOS 사파리는 스크롤바 모양을 못 바꿔 기본 모양으로 나온다. 꼭 같아야 하면 스크롤바를 직접 그려야 한다 */
+@supports not selector(::-webkit-scrollbar) { .bagwrap { scrollbar-width: thin; scrollbar-color: var(--bevel-lo) var(--slot-bg); } }
+.slots.hot { margin-top: 6px; }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; margin: 10px auto 0; color: var(--text-dim); width: calc(var(--slot) * 9 + var(--sbar)); max-width: 100%; }
+.legend i { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border: 3px solid; background: var(--slot-bg); }
+.legend .m { border-color: var(--me); }
+.legend .s { border-color: var(--gold); }
+
+.infobar { margin: 10px auto 0; min-height: 64px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; background: var(--slot-bg); border: var(--slot-b) solid; border-color: var(--slot-dark) var(--slot-light) var(--slot-light) var(--slot-dark); padding: 6px 8px; width: calc(var(--slot) * 9 + var(--sbar)); max-width: 100%; }
+.infobar .ib-t { flex: 1; min-width: 140px; overflow-wrap: anywhere; }
+.infobar .xy { color: var(--accent); font-variant-numeric: tabular-nums; font-size: 14px; }
+
+.tip { position: fixed; z-index: 70; pointer-events: none; background: var(--tip-bg); border: 3px solid var(--tip-line); outline: 2px solid var(--outline); padding: 6px 10px; font-size: 14px; max-width: 260px; color: var(--tip-text); }
+.tip .t1 { font-size: 15px; }
+.tip .xy { color: var(--tip-dim); font-variant-numeric: tabular-nums; }
+.tip .tm { color: var(--tip-mine); }
+.tip .ts { color: var(--tip-scrap); }
