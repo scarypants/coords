@@ -1,6 +1,6 @@
 // 실행: node tests/domain.test.mjs
 import assert from 'node:assert/strict';
-import { CATS, catOf, SKINS, skinOf, tpCmd, coordText, counterpart, normalize, syncLayout, swap, sameLayout } from '../js/domain.js';
+import { CATS, catOf, SKINS, skinOf, SKIN_DATA_PREFIX, SKIN_DATA_MAX, tpCmd, coordText, counterpart, normalize, syncLayout, swap, sameLayout } from '../js/domain.js';
 
 /* tp 명령어와 대응 좌표 */
 assert.equal(tpCmd({ dimension: 'overworld', x: 1, y: 64, z: -3 }), '/tp @s 1 64 -3');
@@ -62,5 +62,13 @@ assert.equal(moved.skin, 'snowman');
 const swapped = swap(base, { zone: 'bag', i: 0 }, { zone: 'bag', i: 1 });
 assert.deepEqual(swapped.bag.slice(0, 2), [2, 1]);
 assert.ok(sameLayout(swap(swapped, { zone: 'bag', i: 0 }, { zone: 'bag', i: 1 }), base));
+
+/* 올린 스킨: PNG data URL이고 크기 제한 안일 때만 받는다. 정리와 이동을 거쳐도 남는다 */
+const png = SKIN_DATA_PREFIX + 'iVBORw0KGgo=';
+assert.equal(normalize({ skinData: png }).skinData, png);
+assert.equal(normalize({ skinData: 'data:text/html;base64,PHNjcmlwdD4=' }).skinData, null);
+assert.equal(normalize({ skinData: SKIN_DATA_PREFIX + 'A'.repeat(SKIN_DATA_MAX) }).skinData, null);
+const custom = syncLayout(normalize({ skin: 'custom', skinData: png }), [1, 2]);
+assert.equal(swap(custom, { zone: 'bag', i: 0 }, { zone: 'bag', i: 1 }).skinData, png);
 
 console.log('ok');

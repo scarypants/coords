@@ -43,6 +43,11 @@ export const SKINS = [
 ];
 export const skinOf = (id) => SKINS.find((s) => s.id === id) ?? SKINS[0];
 
+// 직접 올린 스킨: 64x64 PNG를 data URL로 바꿔 칸 배치와 같은 줄에 저장한다. schema.sql 의 크기 제한(20000) 안에 들어가게
+export const SKIN_DATA_PREFIX = 'data:image/png;base64,';
+export const SKIN_DATA_MAX = 16000;
+const isSkinData = (v) => typeof v === 'string' && v.startsWith(SKIN_DATA_PREFIX) && v.length <= SKIN_DATA_MAX;
+
 /* ---------- 좌표와 tp ---------- */
 export const DIM_LABEL = { overworld: '오버월드', nether: '네더', end: '엔드' };
 const DIM_ID = { nether: 'minecraft:the_nether', end: 'minecraft:the_end' };
@@ -62,7 +67,8 @@ export function counterpart(p) {
 }
 
 /* ---------- 인벤토리 칸 배치 ----------
-   { hotbar: [9칸], bag: [9의 배수 칸], skin: 스킨 id | null }, 각 칸은 좌표 id 또는 null.
+   { hotbar: [9칸], bag: [9의 배수 칸], skin: 스킨 id | 'custom' | null, skinData: 올린 스킨 data URL | null },
+   각 칸은 좌표 id 또는 null.
    스킨 선택도 이름별로 폰과 PC가 같아야 해서 같은 줄에 저장한다 */
 const HOTBAR = 9, ROW = 9, MIN_BAG = 27;
 const idOrNull = (v) => (Number.isInteger(v) ? v : null);
@@ -73,6 +79,7 @@ export function normalize(raw) {
     hotbar: Array.from({ length: HOTBAR }, (_, i) => idOrNull(raw?.hotbar?.[i])),
     bag: Array.isArray(raw?.bag) ? raw.bag.map(idOrNull) : [],
     skin: typeof raw?.skin === 'string' ? raw.skin : null,
+    skinData: isSkinData(raw?.skinData) ? raw.skinData : null,
   };
 }
 

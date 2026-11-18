@@ -1,7 +1,7 @@
 // 좌표 어디더라: 화면 전부. 순수 규칙은 domain.js, Supabase 호출은 data.js
 import * as db from './data.js';
 import {
-  CATS, GROUPS, catOf, ARMOR_SLOTS, SKINS, skinOf, DIM_LABEL,
+  CATS, GROUPS, catOf, ARMOR_SLOTS, SKINS, skinOf, SKIN_DATA_MAX, DIM_LABEL,
   coordText, tpCmd, counterpart, normalize, syncLayout, swap, sameLayout,
 } from './domain.js';
 
@@ -494,8 +494,8 @@ function renderInventory() {
   $('c-hot').textContent = `${layout.hotbar.filter((v) => v !== null).length} / 9`;
   $('c-all').textContent = state.places.length;
   $('tip').hidden = true;
-  const skin = skinOf(layout.skin);
-  if (drawnSkin !== skin.id) { drawnSkin = skin.id; drawSkin($('skin'), skin); }
+  const skin = mySkin();
+  if (drawnSkin !== skin.src) { drawnSkin = skin.src; drawSkin($('skin'), skin); }
   renderInfo();
 }
 
@@ -532,9 +532,7 @@ function initInventory() {
     else if (k === 'open') openBook(p);
     else { sel = null; toggleScrap(p); }
   });
-  $('skinbtn').addEventListener('click', () => {
-    if (layout) openSkinPicker(layout.skin, (id) => { layout = { ...layout, skin: id }; scheduleSave(); renderInventory(); toast('스킨을 장착했습니다'); });
-  });
+  $('skinbtn').addEventListener('click', () => { if (layout) openSkinPicker(); });
   $('armor').addEventListener('click', (e) => {
     const s = e.target.closest('[data-armor]')?.dataset.armor;
     if (s) toast(worn[s] ? `${armorName(worn[s], s)}입니다. 방어력 +0` : '갑옷 칸이 비어 있습니다');
@@ -595,18 +593,44 @@ async function loadArmor() {
 }
 
 /* ---------- 스킨 (정면 16x32 그리기와 선택 창) ---------- */
-const skinImages = new Map(); // 스킨 id -> Promise<Image | null>
+// 스킨은 { id, name, src }. src는 assets/skins/ 의 파일 주소이거나, 직접 올린 스킨의 data URL
+const listSkin = (s) => ({ ...s, src: `assets/skins/${s.file}` });
+function mySkin() {
+  return layout?.skin === 'custom' && layout.skinData ? { id: 'custom', name: '내 스킨', src: layout.skinData } : listSkin(skinOf(layout?.skin));
+}
+
+const skinImages = new Map(); // src -> Promise<Image | null>
+const isSkinSize = (im) => im.width === 64 && (im.height === 64 || im.height === 32);
+
+function loadImage(src) {
+  return new Promise((res) => {
+    const im = new Image();
+    im.onload = () => res(im);
+    im.onerror = () => res(null);
+    im.src = src;
+  });
+}
 
 function loadSkinImage(skin) {
-  if (!skinImages.has(skin.id)) {
-    skinImages.set(skin.id, new Promise((res) => {
-      const im = new Image();
-      im.onload = () => res(im.width === 64 && (im.height === 64 || im.height === 32) ? im : null);
-      im.onerror = () => res(null);
-      im.src = `assets/skins/${skin.file}`;
-    }));
-  }
-  return skinImages.get(skin.id);
+  if (!skinImages.has(skin.src)) skinImages.set(skin.src, loadImage(skin.src).then((im) => (im && isSkinSize(im) ? im : null)));
+  return skinImages.get(skin.src);
+}
+
+// 올린 파일을 검사하고, 한 번 다시 그려 PNG data URL로 만든다 (파일 속 다른 데이터는 버려진다)
+async function readSkinFile(file) {
+  if (file.type !== 'image/png') throw new Error('스킨은 PNG 파일이어야 합니다');
+  if (file.size > 200000) throw new Error('파일이 너무 큽니다');
+  const url = URL.createObjectURL(file);
+  try {
+    const im = await loadImage(url);
+    if (!im || !isSkinSize(im)) throw new Error('스킨은 64×64 또는 64×32 PNG여야 합니다');
+    const c = document.createElement('canvas');
+    c.width = 64; c.height = im.height;
+    c.getContext('2d').drawImage(im, 0, 0);
+    const data = c.toDataURL('image/png');
+    if (data.length > SKIN_DATA_MAX) throw new Error('스킨 그림이 너무 복잡해서 저장할 수 없습니다');
+    return data;
+  } finally { URL.revokeObjectURL(url); }
 }
 
 // 스킨 파일이 없을 때 쓰는 캐릭터
@@ -643,28 +667,50 @@ function paintSkin(x, img) {
 }
 
 // 늦게 끝난 이전 그리기가 새 스킨을 덮어쓰지 않게 id로 확인한다
+const drawing = new WeakMap(); // canvas -> 마지막으로 그리라고 한 src
 async function drawSkin(canvas, skin) {
-  canvas.dataset.skin = skin.id;
+  drawing.set(canvas, skin.src);
   const img = await loadSkinImage(skin);
-  if (canvas.dataset.skin !== skin.id) return;
+  if (drawing.get(canvas) !== skin.src) return;
   const x = canvas.getContext('2d');
   x.imageSmoothingEnabled = false;
   x.clearRect(0, 0, 16, 32);
   if (img) paintSkin(x, img); else paintFallback(x);
 }
 
-function openSkinPicker(currentId, onPick) {
-  const current = skinOf(currentId).id;
+function setSkin(patch) {
+  layout = { ...layout, ...patch };
+  scheduleSave(); renderInventory();
+  toast('스킨을 장착했습니다');
+}
+
+// 정해진 스킨 중에서 고르거나, 내 PNG를 올린다
+function openSkinPicker() {
+  const current = mySkin().id;
+  const options = [...SKINS.map(listSkin), ...(layout.skinData ? [{ id: 'custom', name: '내 스킨', src: layout.skinData }] : [])];
   const m = makeDialog('스킨 선택', '<h2>스킨 선택</h2><div class="skingrid">'
-    + SKINS.map((s) => `<button type="button" class="skinopt" data-skin="${s.id}" aria-pressed="${s.id === current}"><canvas width="16" height="32" aria-hidden="true"></canvas><span>${esc(s.name)}</span></button>`).join('')
-    + '</div><div class="actions"><button class="btn" type="button" data-close>닫기</button></div>');
-  m.querySelectorAll('.skinopt').forEach((b) => drawSkin(b.querySelector('canvas'), skinOf(b.dataset.skin)));
+    + options.map((s) => `<button type="button" class="skinopt" data-skin="${s.id}" aria-pressed="${s.id === current}"><canvas width="16" height="32" aria-hidden="true"></canvas><span>${esc(s.name)}</span></button>`).join('')
+    + '</div><p class="note">내 스킨: 64×64 마크 스킨 PNG. 폰과 PC에 같이 적용됩니다</p>'
+    + '<div class="actions"><button class="btn" type="button" data-upload>내 스킨 올리기</button><button class="btn" type="button" data-close>닫기</button></div>'
+    + '<input type="file" accept="image/png" hidden>');
+  m.querySelectorAll('.skinopt').forEach((b, i) => drawSkin(b.querySelector('canvas'), options[i]));
+  const input = m.querySelector('input[type=file]');
+  input.addEventListener('change', async () => {
+    const f = input.files[0];
+    input.value = '';
+    if (!f) return;
+    let data;
+    try { data = await readSkinFile(f); } catch (e) { return toast(e.message); }
+    closeModal();
+    setSkin({ skin: 'custom', skinData: data });
+  });
   m.addEventListener('click', (e) => {
     if (e.target.closest('[data-close]')) return closeModal();
+    if (e.target.closest('[data-upload]')) return input.click();
     const id = e.target.closest('[data-skin]')?.dataset.skin;
     if (!id) return;
     closeModal();
-    if (id !== current) onPick(id);
+    if (id !== current) setSkin({ skin: id });
   });
   openModal(m);
 }
