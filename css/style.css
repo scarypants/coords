@@ -133,9 +133,9 @@ svg { display: block; }
 .ico { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 .ico text { fill: #fff; stroke: #000; stroke-opacity: .6; stroke-width: 1.5; paint-order: stroke; font-family: var(--font-pixel); }
 
-/* 아이템 칸 틀 (인벤토리 칸과 같은 모양). 안쪽이 48px이 되도록 54px */
-.slot-frame { width: 54px; height: 54px; flex: none; background: var(--slot-bg); border: 3px solid; border-color: var(--slot-dark) var(--slot-light) var(--slot-light) var(--slot-dark); }
-.slot-frame.small { width: 38px; height: 38px; } /* 안쪽 32px */
+/* 아이템 칸 틀 (인벤토리 칸과 같은 모양). 안쪽이 32px이 되도록 38px */
+.slot-frame { width: 38px; height: 38px; flex: none; background: var(--slot-bg); border: 3px solid; border-color: var(--slot-dark) var(--slot-light) var(--slot-light) var(--slot-dark); }
+.slot-frame.small { width: 20px; height: 20px; border-width: 2px; } /* 안쪽 16px */
 
 @media (prefers-reduced-motion: reduce) {
   *, html::after { animation: none !important; }
@@ -207,8 +207,8 @@ label { display: block; }
 .toolbar .field { flex: 1 1 200px; width: auto; }
 .toolbar select.field { flex: 0 1 150px; }
 .catpanel { position: absolute; left: 0; top: 100%; margin-top: 8px; z-index: 15; width: min(560px, 100%); max-height: 70vh; overflow: auto; }
-.catgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; margin: 10px 0; }
-.catopt { display: flex; align-items: center; gap: 8px; padding: 3px 8px 3px 3px; min-height: 44px; background: var(--chip-off); border: 3px solid var(--panel-lo); color: var(--text-dim); cursor: pointer; text-align: left; }
+.catgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; margin: 10px 0; }
+.catopt { display: flex; align-items: center; gap: 6px; padding: 2px 8px 2px 4px; min-height: 34px; font-size: 14px; background: var(--chip-off); border: 3px solid var(--panel-lo); color: var(--text-dim); cursor: pointer; text-align: left; }
 .catopt .ci { opacity: .5; }
 .catopt[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
 .catopt[aria-pressed="true"] .ci { opacity: 1; }
@@ -216,21 +216,22 @@ label { display: block; }
 .count { color: var(--text); font-size: 14px; margin: 0 2px 8px; text-shadow: 1px 1px 0 var(--panel-hi); } /* 배경 사진 위에서도 읽히게 */
 
 /* 좌표 한 줄: 아이콘 | 이름과 정보 | 좌표 | 버튼 */
-.row { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto auto; grid-template-areas: "ic main coords act"; gap: 0 14px; align-items: center; padding: 8px 10px; margin-bottom: 6px; background: var(--surface); border: 3px solid var(--surface-line); border-left-width: 6px; }
+.row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto auto; grid-template-areas: "ic main coords act"; gap: 0 10px; align-items: center; padding: 4px 8px; margin-bottom: 4px; background: var(--surface); border: 3px solid var(--surface-line); border-left-width: 6px; }
 .row.mine { border-left-color: var(--me); }
 .row .ic { grid-area: ic; }
 .row .main { grid-area: main; min-width: 0; }
 .row { cursor: pointer; }
 .row:hover { border-color: var(--accent); }
 .row.mine:hover { border-left-color: var(--me); }
-.row .nm { font-size: 17px; overflow-wrap: anywhere; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; display: block; max-width: 100%; }
+.row .nm { font-size: 15px; overflow-wrap: anywhere; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; display: block; max-width: 100%; }
 /* 나침반 버튼: 주우면 색이 살아나고, 안 주웠으면 회색 */
-.btn.compass { width: 48px; padding: 0; }
-.btn.compass .cico { width: 32px; height: 32px; }
+.btn.compass { width: 34px; padding: 0; }
+.btn.compass .cico { width: 16px; height: 16px; }
 .btn.compass[aria-pressed="false"] .cico { filter: grayscale(1) brightness(.7); opacity: .7; }
-.row .coords { grid-area: coords; color: var(--accent); font-size: 18px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-.row .act { grid-area: act; display: flex; gap: 2px; align-items: center; justify-content: flex-end; min-width: 232px; } /* 수정, X 버튼이 없는 줄도 좌표 열이 어긋나지 않게 */
-.meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--text-dim); }
+.row .coords { grid-area: coords; color: var(--accent); font-size: 15px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.row .act { grid-area: act; display: flex; gap: 2px; align-items: center; justify-content: flex-end; min-width: 170px; }
+.row .btn { min-height: 32px; padding: 0 8px; font-size: 14px; } /* 목록 줄 안 버튼은 작게 */ /* 수정, X 버튼이 없는 줄도 좌표 열이 어긋나지 않게 */
+.meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--text-dim); }
 .dimtag { display: inline-flex; align-items: center; }
 .dimtag .ico { width: 16px; height: 16px; } /* 차원 아이콘은 1배. 배지 글자와 같은 높이 */
 .d-overworld { background: var(--dim-overworld); }
@@ -240,7 +241,7 @@ label { display: block; }
 .empty { padding: 28px 16px; text-align: center; color: var(--accent); background: var(--surface); border: 3px dashed var(--surface-line); }
 
 @media (max-width: 700px) {
-  .row { grid-template-columns: 54px minmax(0, 1fr); grid-template-areas: "ic main" "coords coords" "act act"; gap: 4px 12px; }
+  .row { grid-template-columns: 38px minmax(0, 1fr) auto; grid-template-areas: "ic main main" "coords coords act"; gap: 2px 10px; }
   .row .coords { text-align: left; }
   .row .act { min-width: 0; justify-content: flex-start; }
 }
