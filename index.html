@@ -12,7 +12,7 @@
 <header class="topbar" id="topbar" hidden>
   <div class="topbar-in">
     <button class="brand" id="brand" type="button" aria-label="좌표 어디더라 맨 위로"><span class="lg" aria-hidden="true">?</span><span>좌표 어디더라</span></button>
-    <span class="who" id="who-badge"></span>
+    <button class="who" id="who-badge" type="button" title="비밀번호 바꾸기"></button>
     <button class="btn" id="chip" type="button" aria-expanded="false" aria-controls="pop"><span class="dot" id="dot"></span>서버 주소</button>
     <button class="btn" id="navbtn" type="button">인벤토리</button>
   </div>
@@ -30,10 +30,10 @@
     <h1 class="title">좌표 어디더라</h1>
     <p class="tag">좌표 아는 사람?</p>
     <form class="panel" id="login-form" novalidate>
-      <label for="l-pw"><span>방 비번</span></label>
-      <input class="field" id="l-pw" type="password" autocomplete="off">
-      <label for="l-name" style="margin-top:10px"><span>이름 (마크 아이디)</span></label>
-      <input class="field" id="l-name" type="text" autocomplete="off" maxlength="16">
+      <label for="l-name"><span>아이디</span></label>
+      <input class="field" id="l-name" type="text" autocomplete="username" autocapitalize="off" maxlength="16">
+      <label for="l-pw" style="margin-top:10px"><span>비밀번호</span></label>
+      <input class="field" id="l-pw" type="password" autocomplete="current-password" inputmode="numeric" pattern="[0-9]*" maxlength="4">
       <div class="err" id="l-err" role="alert" hidden></div>
       <button class="btn primary" id="l-btn" type="submit" style="width:100%;margin:12px 0 0">여기 다 있음</button>
     </form>

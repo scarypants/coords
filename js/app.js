@@ -141,7 +141,7 @@ function showView(v) {
 
 function render() { renderList(); renderInventory(); }
 
-// 요청 실패 공통 처리: 콘솔에 남기고, 알리고, 방 비번이 바뀌어 쫓겨난 건 아닌지 확인
+// 요청 실패 공통 처리: 콘솔에 남기고, 알리고, 로그아웃된 건 아닌지 확인
 function fail(text, err) {
   console.error(err);
   if (text) toast(text);
@@ -149,7 +149,7 @@ function fail(text, err) {
 }
 
 /* ================= 입장, 퇴장 ================= */
-const MSG_CHANGED = '방 비번이 변경되었습니다. 새 비번으로 다시 접속하세요';
+const MSG_OUT = '로그아웃되었습니다. 다시 로그인하세요'; // 비밀번호가 바뀌었거나 계정이 지워졌을 때
 
 function showLoginError(text) {
   const e = $('l-err');
@@ -175,35 +175,67 @@ async function enter(name) {
   await Promise.all([loadPlaces(), loadServer(), loadScraps(), loadLayout(), loadArmor()]);
 }
 
-// 아직 멤버인지 확인. 방 비번이 바뀌어 members가 지워졌다면 입장 화면으로
+// 아직 로그인 상태인지 확인. 비밀번호가 바뀌거나 계정이 지워져 members에서 빠졌다면 입장 화면으로
 async function verify() {
   if (!state.me) return;
-  try { if (!(await db.currentName())) leave(MSG_CHANGED); } catch { /* 네트워크 오류로는 쫓아내지 않는다 */ }
+  try { if (!(await db.currentName())) leave(MSG_OUT); } catch { /* 네트워크 오류로는 쫓아내지 않는다 */ }
 }
 
-const LOGIN_ERRORS = {
-  wrong: (r) => `방 비번이 틀렸습니다. 남은 기회 ${r.left}번`,
-  locked: (r) => `접속이 잠겼습니다. ${r.retry_after}초 뒤에 다시 시도하세요`,
-  bad_name: () => '이름은 1~16자여야 합니다',
-  not_configured: () => '방 비번이 아직 설정되지 않았습니다',
+// 로그인과 비밀번호 변경이 같이 쓰는 실패 문구
+const PW_ERRORS = {
+  wrong: (r) => '비밀번호가 틀렸습니다' + (r.left != null ? `. 남은 기회 ${r.left}번` : ''),
+  locked: (r) => `너무 많이 틀려서 잠겼습니다. ${r.retry_after}초 뒤에 다시 시도하세요`,
+  bad_password: () => '비밀번호는 숫자 4자리여야 합니다',
 };
+const PIN = /^[0-9]{4}$/; // 비밀번호 규칙: 숫자 4자리 (schema.sql 과 같게)
+const pwError = (r) => PW_ERRORS[r.status]?.(r) ?? '처리하지 못했습니다';
 
 async function onLogin(e) {
   e.preventDefault();
-  const pw = $('l-pw').value.trim(), name = $('l-name').value.trim();
+  const name = $('l-name').value.trim(), pw = $('l-pw').value;
   if (!db.configured) return showLoginError('js/config.js에 Supabase 주소와 키가 필요합니다');
-  if (!name) return showLoginError('이름을 입력하세요');
-  if (!pw) return showLoginError('방 비번을 입력하세요');
+  if (!name || !pw) return showLoginError('아이디와 비밀번호를 입력하세요');
+  if (!PIN.test(pw)) return showLoginError(PW_ERRORS.bad_password());
   showLoginError('');
   $('l-btn').disabled = true;
   try {
-    const r = await db.join(pw, name);
+    const r = await db.login(name, pw);
     if (r.status === 'ok') { await enter(r.name); toast(`${r.name}이(가) 서버에 접속했습니다`); }
-    else showLoginError(LOGIN_ERRORS[r.status]?.(r) ?? '접속하지 못했습니다');
+    else showLoginError(r.status === 'wrong' && r.left == null ? '아이디 또는 비밀번호가 틀렸습니다' : pwError(r));
   } catch (err) {
     console.error(err);
     showLoginError('서버와의 연결이 끊어졌습니다');
   } finally { $('l-btn').disabled = false; }
+}
+
+// 내 비밀번호 바꾸기 (상단 바의 내 이름을 누르면 열림)
+function openPasswordForm() {
+  const m = makeDialog('비밀번호 바꾸기', '<h2>비밀번호 바꾸기</h2>'
+    + '<label for="p-old">지금 비밀번호</label><input class="field" id="p-old" type="password" autocomplete="current-password" inputmode="numeric" pattern="[0-9]*" maxlength="4">'
+    + '<label for="p-new">새 비밀번호</label><input class="field" id="p-new" type="password" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" maxlength="4">'
+    + '<label for="p-new2">새 비밀번호 확인</label><input class="field" id="p-new2" type="password" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" maxlength="4">'
+    + '<p class="note">바꾸면 내 다른 기기는 로그아웃됩니다</p>'
+    + '<div class="err" id="p-err" role="alert" hidden></div>'
+    + '<div class="actions"><button class="btn" type="button" id="p-cancel">취소</button><button class="btn primary" type="submit" id="p-save">바꾸기</button></div>', 'form');
+  m.noValidate = true;
+  m.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const show = (text) => { $('p-err').textContent = text; $('p-err').hidden = !text; };
+    const oldPw = $('p-old').value, newPw = $('p-new').value;
+    if (!PIN.test(newPw)) return show(PW_ERRORS.bad_password());
+    if (newPw !== $('p-new2').value) return show('새 비밀번호가 서로 다릅니다');
+    show('');
+    $('p-save').disabled = true;
+    let r;
+    try { r = await db.changePassword(oldPw, newPw); } catch (err) {
+      $('p-save').disabled = false; show('비밀번호를 바꾸지 못했습니다'); return fail(null, err);
+    }
+    if (r.status !== 'ok') { $('p-save').disabled = false; return show(pwError(r)); }
+    closeModal();
+    toast('비밀번호를 바꿨습니다');
+  });
+  openModal(m);
+  $('p-cancel').addEventListener('click', closeModal);
 }
 
 /* ================= 서버 주소 칩 ================= */
@@ -640,6 +672,7 @@ function openSkinPicker(currentId, onPick) {
 /* ================= 시작 ================= */
 function wire() {
   $('login-form').addEventListener('submit', onLogin);
+  $('who-badge').addEventListener('click', openPasswordForm);
   $('brand').addEventListener('click', () => { if (state.me) { showView('list'); loadPlaces(); } });
   $('navbtn').addEventListener('click', () => { showView(state.view === 'inv' ? 'list' : 'inv'); sel = null; render(); });
 
@@ -707,7 +740,7 @@ async function boot() {
   try {
     const name = await db.currentName();
     if (name) return await enter(name);
-    leave(store.get('zwa_joined') ? MSG_CHANGED : ''); // 입장한 적 있는데 멤버가 아니면 방 비번이 바뀐 것
+    leave(store.get('zwa_joined') ? MSG_OUT : ''); // 로그인한 적 있는데 멤버가 아니면 로그아웃된 것
   } catch (e) {
     console.error(e);
     leave('서버와의 연결이 끊어졌습니다');

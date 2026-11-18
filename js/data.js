@@ -17,12 +17,16 @@ export async function currentName() {
   return session ? ok(await sb.rpc('current_name')) : null;
 }
 
-// { status: 'ok' | 'wrong' | 'locked' | 'bad_name' | 'not_configured' | 'no_auth', ... }
-export async function join(password, name) {
+// 방장이 SQL로 만들어 준 아이디와 비밀번호로 로그인. 기기마다 익명 계정을 하나 만들어 그 아이디에 묶는다
+// { status: 'ok' | 'wrong' | 'locked' | 'no_auth', name?, left?, retry_after? }
+export async function login(name, password) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) ok(await sb.auth.signInAnonymously());
-  return ok(await sb.rpc('join_room', { p_password: password, p_name: name }));
+  return ok(await sb.rpc('login', { p_name: name, p_password: password }));
 }
+
+// { status: 'ok' | 'wrong' | 'locked' | 'bad_password' | 'not_member', ... }. 성공하면 내 다른 기기는 로그아웃
+export const changePassword = async (oldPw, newPw) => ok(await sb.rpc('change_my_password', { p_old: oldPw, p_new: newPw }));
 
 /* ---------- 좌표 ---------- */
 export const fetchPlaces = async () => ok(await sb.from('places').select('*').order('created_at', { ascending: false }));
